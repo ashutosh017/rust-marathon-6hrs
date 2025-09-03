@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::sync::mpsc;
+use std::thread::spawn;
 
 fn main() {
     let mut vec = Vec::new();
@@ -76,18 +78,38 @@ fn main() {
     println!("Longest string is: {}", longest_str);
 
     let name = String::from("lifetimes with structs");
-    let user = User2{
-        name:&name
-    };
-    println!("{}",user.name);
+    let user = User2 { name: &name };
+    println!("{}", user.name);
     let user = String::from("wtf");
-    println!("{}",user);
+    println!("{}", user);
+
+  // sum from 1 to 10^8
+
+    let (tx, rx) = mpsc::channel();
+    for i in 0..10 {
+        let producer = tx.clone();
+        spawn(move || {
+            let mut sum: u64 = 0;
+
+            for j in 1..10000000+1{
+                sum = sum + (i *10000000 + j);
+                // println!("{}",i*10000000+j);
+            }
+            producer.send(sum).unwrap();
+        });
+    }
+    drop(tx);
+    let mut final_sum: u64= 0;
+    for val in rx{
+        final_sum = final_sum + val;
+    }
+    println!("Final sum is: {}", final_sum);
+    println!("{}", (10000000_u64*10000001_u64)/2);
 }
 
-struct  User2<'a>{
-    name:&'a str
+struct User2<'a> {
+    name: &'a str,
 }
-
 
 fn longest<'a>(str1: &'a str, str2: &'a str) -> &'a str {
     if str1.len() > str2.len() {
